@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12001c">
+<title>给你</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:#12001c; color:#fff;
+    position:relative;
+  }
+  #bg {
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(1200px 800px at 20% 10%, #3d0a3f 0%, transparent 60%),
+      radial-gradient(1000px 700px at 85% 90%, #2a0a4a 0%, transparent 55%),
+      linear-gradient(160deg,#1a0226 0%,#12001c 45%,#0d0014 100%);
+  }
+  #stars { position:fixed; inset:0; z-index:1; pointer-events:none; }
+  .star { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--d) ease-in-out infinite alternate; }
+  @keyframes twinkle { from{opacity:.12; transform:scale(.8)} to{opacity:.85; transform:scale(1.15)} }
+
+  .stage { position:fixed; inset:0; z-index:2; display:grid; place-items:center; padding:0 22px; }
+
+  /* ================= 开场 ================= */
+  #intro {
+    grid-area:1/1;
+    width:100%; max-width:420px;
+    text-align:center;
+    transition:opacity .65s ease, transform .65s ease;
+  }
+  #intro.gone { opacity:0; transform:scale(1.3); pointer-events:none; }
+
+  .heart-btn {
+    position:relative; width:180px; height:180px; margin:0 auto 8px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .heart { width:100px; height:92px; display:block; animation:beat 1.15s ease-in-out infinite;
+           filter:drop-shadow(0 0 22px rgba(255,45,120,.75)) drop-shadow(0 0 60px rgba(255,45,120,.35)); }
+  @keyframes beat {
+    0%,100% { transform:scale(1); }
+    15%     { transform:scale(1.14); }
+    32%     { transform:scale(.97); }
+    52%     { transform:scale(1.08); }
+    70%     { transform:scale(1); }
+  }
+  .ripple {
+    position:absolute; width:110px; height:110px; border-radius:50%;
+    border:1px solid rgba(255,90,150,.55);
+    animation:ripple 2.4s ease-out infinite;
+  }
+  .ripple:nth-of-type(2){ animation-delay:.8s; }
+  .ripple:nth-of-type(3){ animation-delay:1.6s; }
+  @keyframes ripple {
+    from { transform:scale(.85); opacity:.75; }
+    to   { transform:scale(2.1); opacity:0; }
+  }
+
+  .hint { font-size:15px; letter-spacing:.3em; color:rgba(255,255,255,.78); animation:breathe 2.4s ease-in-out infinite; }
+  .hint span { display:block; margin-top:12px; font-size:11.5px; letter-spacing:.22em; color:rgba(255,255,255,.38); }
+  @keyframes breathe { 0%,100%{opacity:.55} 50%{opacity:1} }
+
+  /* ================= 信纸 ================= */
+  #letter {
+    grid-area:1/1;
+    width:100%; max-width:420px;
+    transform:translateY(26px) scale(.97);
+    opacity:0; pointer-events:none;
+    transition:opacity .7s ease, transform .75s cubic-bezier(.2,.8,.3,1);
+  }
+  #letter.show { opacity:1; transform:none; pointer-events:auto; }
+
+  .card {
+    background:linear-gradient(165deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:26px;
+    padding:32px 24px 26px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 30px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  .to { font-size:12.5px; letter-spacing:.32em; color:rgba(255,143,183,.9); margin-bottom:18px; }
+  .line { font-size:16px; line-height:2.1; color:rgba(255,255,255,.93); min-height:2.1em; letter-spacing:.02em; }
+  .line .caret { display:inline-block; width:1px; height:1em; background:#ff7aa8; margin-left:2px; vertical-align:-2px; animation:blink .8s steps(1) infinite; }
+  @keyframes blink { 50%{opacity:0} }
+
+  .ask {
+    margin-top:24px; font-size:17.5px; font-weight:600; line-height:1.75;
+    background:linear-gradient(90deg,#ffd6e6,#ff8fb7,#ffd6e6);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    opacity:0; transition:opacity .8s;
+  }
+  .ask.show { opacity:1; }
+
+  .btns { margin-top:24px; display:flex; gap:12px; opacity:0; transition:opacity .6s; }
+  .btns.show { opacity:1; }
+
+  button {
+    font-family:inherit; font-size:15.5px; border:none; cursor:pointer;
+    padding:13px 0; border-radius:999px; flex:1;
+    transition:transform .25s cubic-bezier(.2,.8,.3,1), opacity .3s;
+  }
+  #yes { background:linear-gradient(135deg,#ff5c8a,#ff2d55); color:#fff; font-weight:600; box-shadow:0 10px 28px rgba(255,45,85,.42); }
+  #yes:active { transform:scale(.96); }
+  #no { background:rgba(255,255,255,.1); color:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.16); flex:0 0 38%; }
+
+  .from { margin-top:20px; text-align:right; font-size:12.5px; color:rgba(255,255,255,.5); letter-spacing:.18em; }
+
+  /* ================= 结局 ================= */
+  #final {
+    position:fixed; inset:0; z-index:5; display:none;
+    align-items:center; justify-content:center; text-align:center; padding:28px;
+    background:radial-gradient(circle at 50% 45%, rgba(255,45,120,.22), transparent 62%);
+  }
+  #final.show { display:flex; }
+  .final-title {
+    font-size:26px; font-weight:700; line-height:1.8;
+    background:linear-gradient(90deg,#fff,#ffc2d6,#fff);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:pop .9s cubic-bezier(.2,.9,.3,1) both;
+  }
+  .final-sub { margin-top:16px; font-size:13.5px; color:rgba(255,255,255,.62); letter-spacing:.14em; animation:pop 1s .25s both; }
+  @keyframes pop { from{opacity:0; transform:translateY(18px) scale(.94)} to{opacity:1; transform:none} }
+
+  .spark { position:fixed; z-index:4; width:8px; height:8px; border-radius:50%; pointer-events:none; will-change:transform,opacity; }
+  .fheart { position:fixed; bottom:-40px; z-index:4; pointer-events:none; font-size:20px; animation:floatUp linear forwards; }
+  @keyframes floatUp { to { transform:translateY(-115vh) rotate(var(--r)); opacity:0; } }
+
+  @media (max-width:360px){ .line{font-size:15px} .final-title{font-size:22px} .heart{width:86px;height:80px} }
+  @media (max-height:640px){ .heart-btn{height:150px} .card{padding:26px 20px 22px} }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="stars"></div>
+
+<div class="stage">
+  <div id="intro">
+    <div class="heart-btn" id="heartBtn">
+      <div class="ripple"></div><div class="ripple"></div><div class="ripple"></div>
+      <svg class="heart" viewBox="0 0 100 92" aria-hidden="true">
+        <defs>
+          <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff7ab0"/>
+            <stop offset=".45" stop-color="#ff2d55"/>
+            <stop offset="1" stop-color="#c9184a"/>
+          </linearGradient>
+          <radialGradient id="hl" cx=".35" cy=".25" r=".6">
+            <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path d="M50 88 C20 66 2 48 2 30 C2 14 14 4 27 4 C38 4 46 11 50 19 C54 11 62 4 73 4 C86 4 98 14 98 30 C98 48 80 66 50 88 Z" fill="url(#hg)"/>
+        <path d="M50 88 C20 66 2 48 2 30 C2 14 14 4 27 4 C38 4 46 11 50 19 C54 11 62 4 73 4 C86 4 98 14 98 30 C98 48 80 66 50 88 Z" fill="url(#hl)"/>
+      </svg>
+    </div>
+    <div class="hint">轻触心上<span>and see what happens</span></div>
+  </div>
+
+  <div id="letter">
+    <div class="card">
+      <div class="to" id="toLine">TO · 你</div>
+      <div class="line" id="line1"></div>
+      <div class="line" id="line2"></div>
+      <div class="line" id="line3"></div>
+      <div class="ask" id="ask"></div>
+      <div class="btns" id="btns">
+        <button id="no">再想想</button>
+        <button id="yes">愿意</button>
+      </div>
+      <div class="from" id="fromLine">—— 我</div>
+    </div>
+  </div>
+</div>
+
+<div id="final">
+  <div>
+    <div class="final-title" id="finalTitle"></div>
+    <div class="final-sub" id="finalSub"></div>
+  </div>
+</div>
+
+<script>
+/* ====================== 想改内容？只改这里 ====================== */
+var CONFIG = {
+  to: "你",
+  from: "一直想对你说的人",
+  lines: [
+    "遇见你之前，我没认真想过谈恋爱这件事。",
+    "遇见你之后，我开始偷偷计划起未来。",
+    "你笑起来的样子，我大概能记一辈子。"
+  ],
+  ask: "所以……愿意和我在一起吗？",
+  yes: "愿意",
+  no: "再想想",
+  finalTitle: "💕 那说好了",
+  finalSub: "余生请多指教 · 从今天开始"
+};
+/* ============================================================== */
+
+function $(id){ return document.getElementById(id); }
+
+/* 星空 */
+(function stars(){
+  var box = $("stars"), frag = document.createDocumentFragment();
+  for (var i=0;i<90;i++){
+    var s = document.createElement("div");
+    s.className = "star";
+    var size = (Math.random()*2.2+0.7).toFixed(1);
+    s.style.width = size+"px"; s.style.height = size+"px";
+    s.style.left = (Math.random()*100).toFixed(2)+"%";
+    s.style.top = (Math.random()*100).toFixed(2)+"%";
+    s.style.setProperty("--d", (Math.random()*3+1.6).toFixed(2)+"s");
+    s.style.animationDelay = (Math.random()*3).toFixed(2)+"s";
+    frag.appendChild(s);
+  }
+  box.appendChild(frag);
+})();
+
+/* 打字机 */
+function typeLine(el, text, speed, done){
+  var i = 0, caret = document.createElement("span");
+  caret.className = "caret";
+  el.textContent = "";
+  el.appendChild(caret);
+  (function tick(){
+    if (i < text.length){
+      caret.insertAdjacentText("beforebegin", text.charAt(i++));
+      setTimeout(tick, speed);
+    } else {
+      setTimeout(function(){ if (caret.parentNode) caret.remove(); done && done(); }, 480);
+    }
+  })();
+}
+
+var opened = false;
+function open(){
+  if (opened) return;
+  opened = true;
+  burst(window.innerWidth/2, window.innerHeight/2, 46);
+  $("intro").classList.add("gone");
+  setTimeout(function(){
+    $("intro").style.display = "none";
+    $("toLine").textContent = "TO · " + CONFIG.to;
+    $("fromLine").textContent = "—— " + CONFIG.from;
+    $("yes").textContent = CONFIG.yes;
+    $("no").textContent = CONFIG.no;
+    $("ask").textContent = CONFIG.ask;
+    $("letter").classList.add("show");
+    var seq = CONFIG.lines;
+    typeLine($("line1"), seq[0] || "", 62, function(){
+      typeLine($("line2"), seq[1] || "", 62, function(){
+        typeLine($("line3"), seq[2] || "", 62, function(){
+          $("ask").classList.add("show");
+          setTimeout(function(){ $("btns").classList.add("show"); }, 420);
+        });
+      });
+    });
+  }, 620);
+}
+
+$("heartBtn").addEventListener("click", open);
+$("intro").addEventListener("click", open);
+
+/* 粒子爆开 */
+function burst(x, y, n){
+  for (var i=0;i<n;i++){
+    (function(){
+      var p = document.createElement("div");
+      p.className = "spark";
+      var hue = 330 + Math.random()*40;
+      p.style.background = "hsl("+hue+",100%,"+(62+Math.random()*18)+"%)";
+      p.style.left = x+"px"; p.style.top = y+"px";
+      p.style.boxShadow = "0 0 12px hsl("+hue+",100%,65%)";
+      document.body.appendChild(p);
+      var ang = Math.random()*Math.PI*2, sp = 60 + Math.random()*220;
+      var tx = Math.cos(ang)*sp, ty = Math.sin(ang)*sp;
+      p.animate([
+        { transform:"translate(-50%,-50%) scale(1)", opacity:1 },
+        { transform:"translate(calc(-50% + "+tx+"px), calc(-50% + "+ty+"px)) scale(0)", opacity:0 }
+      ], { duration: 800 + Math.random()*700, easing:"cubic-bezier(.15,.7,.3,1)" });
+      setTimeout(function(){ p.remove(); }, 1600);
+    })();
+  }
+}
+
+/* "再想想" 会越来越小 */
+var noCount = 0, noTexts = ["再想想","真的？","确定？","别点了","它跑不掉 😆"];
+$("no").addEventListener("click", function(e){
+  e.stopPropagation();
+  noCount++;
+  var b = e.currentTarget;
+  b.style.transform = "scale(" + Math.max(0.35, 1 - noCount*0.14) + ")";
+  b.style.opacity = Math.max(0, 1 - noCount*0.16);
+  if (noCount < noTexts.length) b.textContent = noTexts[noCount];
+  $("yes").style.transform = "scale(" + (1 + noCount*0.06) + ")";
+  if (noCount >= 5){ b.style.pointerEvents = "none"; b.style.opacity = 0; }
+});
+
+/* 答应 */
+$("yes").addEventListener("click", function(e){
+  e.stopPropagation();
+  var r = e.currentTarget.getBoundingClientRect();
+  burst(r.left + r.width/2, r.top + r.height/2, 60);
+  $("finalTitle").textContent = CONFIG.finalTitle;
+  $("finalSub").textContent = CONFIG.finalSub;
+  $("letter").classList.remove("show");
+  setTimeout(function(){
+    $("final").classList.add("show");
+    rainHearts();
+  }, 420);
+});
+
+/* 爱心雨 */
+function rainHearts(){
+  var chars = ["💗","💕","💖","✨","🤍"];
+  var timer = setInterval(function(){
+    var h = document.createElement("div");
+    h.className = "fheart";
+    h.textContent = chars[Math.floor(Math.random()*chars.length)];
+    h.style.left = (Math.random()*92 + 2) + "%";
+    h.style.setProperty("--r", (Math.random()*120-60)+"deg");
+    h.style.fontSize = (14 + Math.random()*20) + "px";
+    h.style.animationDuration = (4.5 + Math.random()*3.5) + "s";
+    document.body.appendChild(h);
+    setTimeout(function(){ h.remove(); }, 8200);
+  }, 260);
+  setTimeout(function(){ clearInterval(timer); }, 12000);
+}
+</script>
+</body>
+</html>
